@@ -8,7 +8,8 @@ let chicken;
 let chickYPos = 10;
 
 let isJumping = false;
-let jumpSpeed = 0;    
+let yJumpSpeed = 0;  
+let xJumpSpeed = 0;  
 
 let trafficCone;
 
@@ -21,6 +22,8 @@ function startGame() {
   chicken = new makeChicken(175, 175, 10);
   trafficCone = new makeTCone();
   scoreLabel = new makeScoreLabel(10,30);
+  cupcake = new makeCupcake(200, 200);
+
 }
 
 let gameCanvas = {
@@ -38,11 +41,27 @@ chickImage.addEventListener('load', function() {
 })
 chickImage.src = 'images/chicken.png';
 
-// traffic cone image
-const trafficConeImg = new Image();
-trafficConeImg.addEventListener('load', function() {
+// egg image
+const tConeImg = new Image();
+tConeImg.addEventListener('load', function() {
 })
-trafficConeImg.src = 'images/t_cone1.png';
+tConeImg.src = 'images/t_cone1.png';
+
+// cupcake
+const cupckImg = new Image();
+cupckImg.addEventListener('load', function() {
+})
+cupckImg.src = 'images/cupcake.png';
+
+function makeCupcake(width, height) {
+    this.width = width;
+    this.height = height;
+
+    this.draw = function() {
+        ctx = gameCanvas.context;
+        ctx.drawImage(cupckImg, 800, 400, this.width, this.height);
+    }
+}
 
 function makeChicken(width, height, x) {
     this.width = width;
@@ -53,12 +72,11 @@ function makeChicken(width, height, x) {
     this.draw = function() {
         ctx = gameCanvas.context;
         ctx.drawImage(chickImage, this.x, this.y, this.width, this.height);
-        //ctx.drawImage(trafficConeImg, 500, 500, 500, 500)
     }
     this.makeFall = function() {
         if (!isJumping) {
             this.y += fallSpeed;
-            fallSpeed += 0.1;
+            fallSpeed += 0.05;
             this.stopChicken();
         }
     }
@@ -70,8 +88,11 @@ function makeChicken(width, height, x) {
     }
     this.jump = function() {
         if (isJumping) {
-            this.y -= jumpSpeed;
-            jumpSpeed += 0.3;
+            this.y -= yJumpSpeed;
+            yJumpSpeed += 0.3;
+
+            this.x += (0.01) * (yJumpSpeed * yJumpSpeed);
+            //xJumpSpeed += 0.1; 
         }
     }
 }
@@ -93,8 +114,8 @@ function randNum(min, max) {
 }
 
 function makeTCone() {
-    let width = 150; //randNum(30, 50);
-    let height = 150; //randNum(50, 200);
+    let width = 200; 
+    let height = 150;
     let speed = randNum(4,6);
 
     this.x = canvasWidth;
@@ -102,7 +123,7 @@ function makeTCone() {
     
     this.draw = function() {
         ctx = gameCanvas.context;
-        ctx.drawImage(trafficConeImg, this.x, this.y, width, height);
+        ctx.drawImage(tConeImg, this.x, this.y, width, height);
     }
     this.attackChicken = function() {
         this.x -= speed;
@@ -110,8 +131,8 @@ function makeTCone() {
     }
     this.returnToAttackPosition = function() {
         if (this.x < 0) {
-            width = 150; //randNum(30, 50);
-            height = 150; //randNum(50, 200);
+            width = 150;
+            height = 150;
             speed = randNum(5,6);
             this.y = canvasHeight - height;
             this.x = canvasWidth;
@@ -121,22 +142,46 @@ function makeTCone() {
     }
 }
 
+
 function collision() {
-    let chickLeft = chicken.x - 75;
-    let chickRight = chicken.x + chicken.width - 75;
+    let chickLeft = chicken.x - 100;
+    let chickRight = chicken.x + chicken.width - 100;
     let tConeLeft = trafficCone.x;
     let tConeRight = trafficCone.x + trafficCone.width;
 
-    let chickBottom = chicken.y + chicken.height - 75;
+    let chickBottom = chicken.y + chicken.height - 100;
     let tConeTop = trafficCone.y;
 
+    
     if (chickRight > tConeLeft && chickLeft < tConeLeft && chickBottom > tConeTop) {
+        if (confirm("game over\nEither OK or Cancel")) {
+            document.location.reload();
+        }
+        else {
+            alert("thanks for playing");
+        }
         gameCanvas.stop();
     }
 }
 
+
+function win() {
+    if (chicken.x == 800) {
+        if (confirm("you won\nEither OK or cancel")) {
+            document.location.reload();
+        }
+        else {
+            alert("thanks for playing");
+        }
+        gameCanvas.stop();
+    }
+    
+}
+
+
 function updateCanvas() {
     collision();
+    win();
 
     ctx = gameCanvas.context;
     ctx.clearRect(0, 0, canvasWidth, canvasHeight)
@@ -150,11 +195,14 @@ function updateCanvas() {
 
     scoreLabel.text = "SCORE: " + score;
     scoreLabel.draw();
+
+    cupcake.draw();
 }
 
 function resetJump() {
-    jumpSpeed = 0;
+    yJumpSpeed = 0;
     isJumping = false;
+    xJumpSpeed = 0;
 }
 
 document.body.onkeyup = function(e) {
@@ -163,5 +211,3 @@ document.body.onkeyup = function(e) {
         setTimeout(function() {resetJump(); }, 1000)
     }
 }
-
-
